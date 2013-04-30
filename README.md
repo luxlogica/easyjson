@@ -22,15 +22,14 @@ There are only 2 functions that you are likely to ever need:
 These 2 functions in turn require other functions that are part of the EasyJSON library, but you are unlikely to use them directly. If you want more detailed information on how these functions work, have a look at the (heavily commented) script.
 
 ### License
-EasyJSON is given to the world under public domain. You are free to use it in any project, open source or commercial, as you wish. 
+This is free and unencumbered software released into the public domain.
 
-The only thing you are not allowed to do, is to sue the authors and contributors of EasyJSON, for any damage or loss that the library may cause you - that is, you assume all legal responsibility for its usage and consequences. 
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and by any means.
 
-__USE AT YOUR OWN RISK__
-No promises are made of suitability or dependability on this code, for any purpose.
-You cannot hold the authors liable for any damage or loss due to any use or application of this code.
+__THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OROTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.__
 
-### How to Contribute
-EasyJSON is an open source project. The code is thoroughly documented, and you are encouraged to study it, and improve on it. 
+### Contributing
+EasyLocalNumber is an open source project. The script is thoroughly documented, and you are encouraged to study it, and improve on it.
 
-If you do make an improvement, please share your code back with the LiveCode community! 
+If you do make any corrections or enhancements to the EasyLocalNumber script, we ask you to please share your code back with the LiveCode community, by sending a pull request here on GitHub!
+
