@@ -2,11 +2,11 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // EasyJSON - an open source JSON parser and encoder for LiveCode
 /////////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // @author: Igor de Oliveira Couto <igor@semperuna.com>
 //
 // This code is open source, and released freely, under no restrictions, to the public domain.
-// 
+//
 // This work is based on previous works by Mark Smith and Andre Garzia.
 // Contributions are welcomed and encouraged.
 //
@@ -43,19 +43,16 @@ function jsonFromArray pArray
       repeat for each element tValue in pArray
          put toJsonValue(tValue) & comma after tJSON
       end repeat
-      delete last char of tJSON // last char is always a comma
-      put "]" after tJSON
+      put "]" into the last char of tJSON
    else
       // the array's keys are not all numerical, so the root element will be a JSON *object*
-      put "{" into tJSON 
+      put "{" into tJSON
       local tKey
       repeat for each key tKey in pArray
          // all JSON object keys are double-quoted strings:
-         put quote & tKey & quote & ":" after tJSON
-         put toJsonValue(pArray[tKey]) & comma after tJSON
+         put quote & tKey & quote & ":" & toJsonValue(pArray[tKey]) & comma after tJSON
       end repeat
-      delete last char of tJSON // last char is always a comma
-      put "}" after tJSON
+      put "}" into the last char of tJSON
    end if
    return tJSON
 end jsonFromArray
@@ -121,7 +118,9 @@ end toJsonValue
 //
 
 function arrayFromJson pJson
-   put jsonTrim(pJson) into pJson
+   replace cr with empty in pJson
+   -- MDW-2013-09-23 faster trim
+   put word 1 to -1 of pJson into pJson
    if pJson is empty then return "Parser Error: no content found in JSON string."
    if first char of pJson is "{" and last char of pJson is "}" then
       // root element in the JSON string is a JSON object
@@ -143,9 +142,8 @@ This function returns a LiveCode array, based on data parsed from a JSON array.
 @return a LiveCode array - numerically indexed, starting from '1'
 */
 private function arrayFromJsonArray pJson
-   put jsonTrim(pJson) into pJson
-   delete first char of pJson
-   delete last char of pJson
+   -- MDW-2013-09-23 faster trim
+   put char 2 to -2 of (word 1 to -1 of pJson) into pJson
    put listJsonTokens(pJson,comma) into pJson
    if word 1 to 2 of pJson is "Parser Error:" then return pJson
    local tArray, tKey, tValue
@@ -167,9 +165,8 @@ This function returns a LiveCode array, based on data parsed from a JSON object.
 @return a LiveCode array, where the JSON object's keys become the array's keys.
 */
 private function arrayFromJsonObject pJson
-   put jsonTrim(pJson) into pJson
-   delete first char of pJson
-   delete last char of pJson
+   -- MDW-2013-09-23 faster trim
+   put char 2 to -2 of (word 1 to -1 of pJson) into pJson
    // a JSON object is a comma-separated list of key:value pairs.
    // first, we will split each key:value pair into a (return-separated) list:
    put listJsonTokens(pJson,comma) into pJson
@@ -236,17 +233,17 @@ private function valueFromJson pJson
          // some JSON encoders escape unicode characters as "\uHHHH",
          // where 'H' is a hexadecimal digit:
          local tCode, tChar
-         repeat while matchText(pJson,"\\u([0-9A-Fa-f]{4})",tCode)
-            set the useUnicode to true
-            put uniDecode(numToChar(baseConvert(tCode,16,10)),"UTF8") into tChar
+         repeat while matchtext(pJson,"\\u([0-9A-Fa-f]{4})",tCode)
+            set the useunicode to true
+            put unidecode(numtochar(baseconvert(tCode,16,10)),"UTF8") into tChar
             replace ("\u" & tCode) with tChar in pJson
          end repeat
-         // the 'delete' (or 'backspace') character is allowed to 
+         // the 'delete' (or 'backspace') character is allowed to
          // be included in a JSON string as well - if we find it,
          // we should simply delete the character before it:
          local tStart, tEnd
-         repeat while matchChunk(pJson, "(\\b)", tStart, tEnd)
-            delete char (tStart - 1) to tEnd of pJson 
+         repeat while matchchunk(pJson, "(\\b)", tStart, tEnd)
+            delete char (tStart - 1) to tEnd of pJson
          end repeat
          return pJson
          break
@@ -258,7 +255,7 @@ private function valueFromJson pJson
       default
          // any other values that we have not been able to identify
          // should issue a warning:
-         return "Parser Error: unable to identify JSON value type in" && pJson & quote & "."
+         return "Parser Error: unable to identify JSON value type in" && pJson & "."
    end switch
 end valueFromJson
 
@@ -266,14 +263,14 @@ end valueFromJson
 /*
 JSON arrays and objects can have strings, as well as other nested arrays and objects,
 inside them. If we try to use LiveCode's built-in text parsing functions to try and
-identify JSON 'items', then LiveCode will not take into consideration whether the 
-itemDelimiter is found inside a literal string or not, and the nesting of objects is 
+identify JSON 'items', then LiveCode will not take into consideration whether the
+itemDelimiter is found inside a literal string or not, and the nesting of objects is
 also ignored - making the parsing fail on most cases.
 This function, therefore, will appropriately indentify JSON 'items' (= tokens), by
 taking into consideration whether the itemDelimiter is inside a literal string or not -
 and only splitting items when the delimiter is outside a literal string - and also taking
 into consideration the nesting level of items - and only splitting items which are found
-at the root level of the JSON string passed. 
+at the root level of the JSON string passed.
 
 @param pJson a string representing a list of valid JSON values - per http://www.json.org.
 @param pDelimiter a single-character itemDelimiter. If pJson contains the contents of a
@@ -283,6 +280,7 @@ at the root level of the JSON string passed.
 */
 private function listJsonTokens pJson, pDelimiter
    local tList, tNesting, tWithinString
+   local tTrimmedList
    put false into tWithinString
    put 0 into tNesting
    if pDelimiter is empty then put comma into pDelimiter
@@ -311,7 +309,7 @@ private function listJsonTokens pJson, pDelimiter
             // When we 'exit' an object, nesting decreases by 1. If, however, tNesting
             // becomes -1, this indicates we came across a closing "]" or "}" without
             // a matching opening bracket - malformed JSON:
-            if tNesting < 0 then 
+            if tNesting < 0 then
                if tChar is "]" then return "Parser Error: unmatched JSON array closure."
                if tChar is "}" then return "Parser Error: unmatched JSON object closure."
             end if
@@ -323,37 +321,16 @@ private function listJsonTokens pJson, pDelimiter
             put return after tList
             break
          default
-            // all other characters should just be directly copied 
+            // all other characters should just be directly copied
             // into the current position on the list:
             put tChar after tList
-      end switch 
+      end switch
    end repeat
    // 'trim' all lines in our list:
-   repeat with x = 1 to the number of lines in tList
-      put jsonTrim(line x of tList) into line x of tList
+   -- MDW-2013-09-23 faster repeat
+   repeat for each line tLine in tList
+      put (word 1 to -1 of tLine) & cr after tTrimmedList
    end repeat
-   return tList
+   return tTrimmedList
 end listJsonTokens
-
-
-/*
-This function 'trims' unnecessary whitespace from the beginning and end of a JSON string.
-
-@param pJSON a JSON string.
-@return the string minus any leading and trailing spaces, tabs and returns. 
-*/
-private function jsonTrim pJson
-   repeat while (first char of pJson is space) \
-         or (first char of pJson is tab) \ 
-         or (first char of pJson is return)
-      delete first char of pJson
-   end repeat
-   repeat while (last char of pJson is space) \
-         or (last char of pJson is tab) \
-         or (last char of pJson is return)
-      delete last char of pJson
-   end repeat
-   return pJson
-end jsonTrim
-
 ?>
