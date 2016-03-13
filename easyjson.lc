@@ -272,7 +272,7 @@ and only splitting items when the delimiter is outside a literal string - and al
 into consideration the nesting level of items - and only splitting items which are found
 at the root level of the JSON string passed.
 
-@param pJson a string representing a list of valid JSON values - per http://www.json.org.
+@param pJson a string representing a list of valid JSON values - as per http://www.json.org.
 @param pDelimiter a single-character itemDelimiter. If pJson contains the contents of a
                   JSON array, then pDelimiter should be a comma. If we are listing the
                   key-value pairs of a JSON object, then pDelimiter should be ":".
